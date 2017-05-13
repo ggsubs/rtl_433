@@ -47,7 +47,7 @@ static int springfield_callback(bitbuffer_t *bitbuffer) {
 				moisture =  nibble[6];
 				uk1      =  nibble[8];	/* unknown. */
 				
-			    printf("{dev=\"Springfield Temperature & Moisture\", sid=\"%d\", ch=\"%d\", batt=\"%s\", tx=\"%s\", temp=\"%f\", moist=\"%d\", ukn=\"%d\"}\n",
+			    printf("{\"dev\":\"Springfield Temperature & Moisture\", \"sid\":\"%d\", \"ch\":\"%d\", \"batt\":\"%s\", \"tx\":\"%s\", \"temp\":\"%f\", \"moist\":\"%d\", \"ukn\":\"%d\"}\n",
 				   sid, channel, battery ? "LOW" : "OK", transmit ? "MANUAL" : "AUTO", tempC, moisture, uk1);
 				   
 				/*
