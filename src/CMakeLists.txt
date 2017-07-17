@@ -16,7 +16,7 @@
 ########################################################################
 # Build utility
 ########################################################################
-add_executable(rtl_433 
+add_executable(rtl_433
 	baseband.c
 	bitbuffer.c
 	data.c
@@ -91,6 +91,17 @@ add_executable(rtl_433
 	devices/maverick_et73x.c
 	devices/rftech.c
 	devices/lacrosse_tx35.c
+	devices/vaillant_vrt340f.c
+	devices/ibis_beacon.c
+	devices/oil_standard.c
+	devices/tpms_citroen.c
+	devices/thermopro_tp11.c
+	devices/solight_te44.c
+	devices/smoke_gs558.c
+	devices/generic_motion.c
+	devices/tpms_toyota.c
+	devices/tpms_ford.c
+	devices/tpms_renault.c
 
 )
 
@@ -101,7 +112,7 @@ target_link_libraries(rtl_433
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
-	
+
 set(INSTALL_TARGETS rtl_433)
 if(UNIX)
 target_link_libraries(rtl_433 m)

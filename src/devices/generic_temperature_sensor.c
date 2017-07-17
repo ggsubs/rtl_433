@@ -13,13 +13,11 @@
 
 
 static int generic_temperature_sensor_callback(bitbuffer_t *bitbuffer) {
-	bitrow_t *bb = bitbuffer->bb;
 	data_t *data;
 	char time_str[LOCAL_TIME_BUFLEN];
-    local_time_str(0, time_str);
+	uint8_t *b = bitbuffer->bb[1];
 	int i,device,battery;
 	float fTemp;
-
 
 	for(i=1;i<10;i++){
 		if(bitbuffer->bits_per_row[i]!=24){
@@ -28,25 +26,32 @@ static int generic_temperature_sensor_callback(bitbuffer_t *bitbuffer) {
 		}
 	}
 
+	// reduce false positives
+	if ((b[0] == 0 && b[1] == 0 && b[2] == 0)
+			|| (b[0] == 0xff && b[1] == 0xff && b[2] == 0xff)) {
+		return 0;
+	}
+
 	//AAAAAAAA BBCCCCCC CCCCCCCC
 	//AAAAAAAA     : ID
 	//BBBB         : battery ?
 	//CCCCCCCCCCCC : Temp
 
-	device=(bb[1][0]);
-	battery=(bb[1][1]&0xF0)>>4;
-	fTemp=(float)((signed short)(((bb[1][1]&0x3f)*256+bb[1][2])<<2))/160.0;
+	device=(b[0]);
+	battery=(b[1]&0xF0)>>4;
+	fTemp=(float)((signed short)(((b[1]&0x3f)*256+b[2])<<2))/160.0;
 
+	local_time_str(0, time_str);
 	data = data_make("time", 	"", 			DATA_STRING, 					time_str,
-                     "model",		"", 			DATA_STRING, 	"Generic temperature sensor 1",
-		     "id",         	"Id",			DATA_FORMAT,	"\t %d",	DATA_INT,	device,
-                     "temperature_C",	"Temperature",		DATA_FORMAT, 	"%.02f C",	DATA_DOUBLE,	fTemp,
-                     "battery",      	"Battery?",		DATA_INT,					battery,
-                     NULL);
-    data_acquired_handler(data);
-	
-    return 1; 
-	
+		"model",		"", 			DATA_STRING, 	"Generic temperature sensor 1",
+		"id",         	"Id",			DATA_FORMAT,	"\t %d",	DATA_INT,	device,
+		"temperature_C",	"Temperature",		DATA_FORMAT, 	"%.02f C",	DATA_DOUBLE,	fTemp,
+		"battery",      	"Battery?",		DATA_INT,					battery,
+		NULL);
+	data_acquired_handler(data);
+
+	return 1;
+
 }
 
 static char *output_fields[] = {
@@ -59,15 +64,13 @@ static char *output_fields[] = {
 };
 
 r_device generic_temperature_sensor = {
-
-  .name          = "Generic temperature sensor 1",
-  .modulation    = OOK_PULSE_PPM_RAW,
-  .short_limit   = 3500,
-  .long_limit    = 4800,
-  .reset_limit   = 10000,
-  .json_callback = &generic_temperature_sensor_callback,
-  .disabled      = 0,
-  .demod_arg     = 0,
-  .fields        = output_fields,
+	.name          = "Generic temperature sensor 1",
+	.modulation    = OOK_PULSE_PPM_RAW,
+	.short_limit   = 3500,
+	.long_limit    = 4800,
+	.reset_limit   = 10000,
+	.json_callback = &generic_temperature_sensor_callback,
+	.disabled      = 0,
+	.demod_arg     = 0,
+	.fields        = output_fields,
 };
-

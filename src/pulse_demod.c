@@ -1,6 +1,6 @@
 /**
  * Pulse demodulation functions
- * 
+ *
  * Binary demodulators (PWM/PPM/Manchester/...) using a pulse data structure as input
  *
  * Copyright (C) 2015 Tommy Vestermark
@@ -114,7 +114,7 @@ int pulse_demod_pwm(const pulse_data_t *pulses, struct protocol_state *device) {
 
 	for(unsigned n = 0; n < pulses->num_pulses; ++n) {
 		// Should we disregard startbit?
-		if(start_bit == 1 && start_bit_detected == 0) {	
+		if(start_bit == 1 && start_bit_detected == 0) {
 			start_bit_detected = 1;
 		} else {
 			// Detect pulse width
@@ -161,7 +161,7 @@ int pulse_demod_pwm_precise(const pulse_data_t *pulses, struct protocol_state *d
 		} else if (fabsf(pulses->pulse[n] - device->long_limit) < p->pulse_tolerance) {
 			bitbuffer_add_bit(&bits, 0);
 		// Sync pulse
-		} else if (p->pulse_sync_width && (fabsf(pulses->pulse[n] - p->pulse_sync_width) < p->pulse_tolerance)) {
+		} else if (p->pulse_sync_width && (abs(pulses->pulse[n] - p->pulse_sync_width) < p->pulse_tolerance)) {
 			bitbuffer_add_row(&bits);
 		// Ignore spurious short pulses
 		} else if (pulses->pulse[n] < (device->short_limit - p->pulse_tolerance)) {
@@ -217,7 +217,7 @@ int pulse_demod_pwm_ternary(const pulse_data_t *pulses, struct protocol_state *d
 			} else {
 				bitbuffer_add_bit(&bits, 1);
 			}
-		} 
+		}
 
 		// End of Message?
 		if(pulses->gap[n] > device->reset_limit) {
@@ -247,8 +247,8 @@ int pulse_demod_manchester_zerobit(const pulse_data_t *pulses, struct protocol_s
 	for(unsigned n = 0; n < pulses->num_pulses; ++n) {
 		// Falling edge is on end of pulse
 		if(pulses->pulse[n] + time_since_last > (device->short_limit * 1.5)) {
-			// Last bit was recorded more than short_limit*1.5 samples ago 
-			// so this pulse start must be a data edge (falling data edge means bit = 1) 
+			// Last bit was recorded more than short_limit*1.5 samples ago
+			// so this pulse start must be a data edge (falling data edge means bit = 1)
 			bitbuffer_add_bit(&bits, 1);
 			time_since_last = 0;
 		} else {
@@ -271,8 +271,8 @@ int pulse_demod_manchester_zerobit(const pulse_data_t *pulses, struct protocol_s
 			time_since_last = 0;
 		// Rising edge is on end of gap
 		} else if(pulses->gap[n] + time_since_last > (device->short_limit * 1.5)) {
-			// Last bit was recorded more than short_limit*1.5 samples ago 
-			// so this pulse end is a data edge (rising data edge means bit = 0) 
+			// Last bit was recorded more than short_limit*1.5 samples ago
+			// so this pulse end is a data edge (rising data edge means bit = 0)
 			bitbuffer_add_bit(&bits, 0);
 			time_since_last = 0;
 		} else {
@@ -371,7 +371,7 @@ int pulse_demod_osv1(const pulse_data_t *pulses, struct protocol_state *device) 
 	}
 
 	/* data bits - manchester encoding */
-	
+
 	/* sync gap could be part of data when the first bit is 0 */
 	if(pulses->gap[n] > pulses->pulse[n]) {
 		manbit ^= 1;
@@ -399,5 +399,70 @@ int pulse_demod_osv1(const pulse_data_t *pulses, struct protocol_state *device) 
 			if(manbit) bitbuffer_add_bit(&bits, 0);
 		}
 	}
+	return events;
+}
+
+
+int pulse_demod_string(const char *code, struct protocol_state *device)
+{
+	int events = 0;
+	bitbuffer_t bits = {0};
+	const char *c;
+	int data = 0;
+	int width = -1;
+
+	for(c = code; *c; ++c) {
+
+		if (*c == ' ') {
+			continue;
+
+		} else if (*c == '0' && (*(c+1) == 'x' || *(c+1) == 'X')) {
+			++c;
+			continue;
+
+		} else if (*c == '{') {
+			if (bits.num_rows > 0) {
+				if (width >= 0) {
+					bits.bits_per_row[bits.num_rows - 1] = width;
+				}
+				bitbuffer_add_row(&bits);
+			}
+
+			width = strtol(c+1, (char **)&c, 0);
+			continue;
+
+		} else if (*c == '/') {
+			bitbuffer_add_row(&bits);
+			if (width >= 0) {
+				bits.bits_per_row[bits.num_rows - 2] = width;
+				width = -1;
+			}
+			continue;
+
+		} else if (*c >= '0' && *c <= '9') {
+			data = *c - '0';
+		} else if (*c >= 'A' && *c <= 'F') {
+			data = *c - 'A' + 10;
+		} else if (*c >= 'a' && *c <= 'f') {
+			data = *c - 'a' + 10;
+		}
+		bitbuffer_add_bit(&bits, data >> 3 & 0x01);
+		bitbuffer_add_bit(&bits, data >> 2 & 0x01);
+		bitbuffer_add_bit(&bits, data >> 1 & 0x01);
+		bitbuffer_add_bit(&bits, data >> 0 & 0x01);
+	}
+	if (width >= 0 && bits.num_rows > 0) {
+		bits.bits_per_row[bits.num_rows - 1] = width;
+	}
+
+	if (device->callback) {
+		events += device->callback(&bits);
+	}
+	// Debug printout
+	if(!device->callback || (debug_output && events > 0)) {
+		fprintf(stderr, "pulse_demod_pcm(): %s \n", device->name);
+		bitbuffer_print(&bits);
+	}
+
 	return events;
 }

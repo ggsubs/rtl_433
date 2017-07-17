@@ -22,7 +22,7 @@ static int ht680_callback(bitbuffer_t *bitbuffer) {
 			(b[3] & 0x82) == 0x82 && //Buttons(4,3) always mask 10000010
 			(b[4] & 0x0A) == 0x0A){  //Buttons(2,1) always mask 00001010
 			b[0] = b[0] & 0x0F; //Clear sync
-						
+
 			// Tristate coding
 			char tristate[21];
 			char *p = tristate;
@@ -51,7 +51,7 @@ static int ht680_callback(bitbuffer_t *bitbuffer) {
 							 "button4",	"Button 4",		DATA_STRING,	((((b[3]&0x7D)>>4) & 0x03) == 3) ? "PRESSED" : "",
 							 NULL);
 			data_acquired_handler(data);
-			
+
 			return 1;
 		}
 	}
@@ -71,12 +71,12 @@ static char *output_fields[] = {
 };
 
 r_device ht680 = {
-  .name          = "HT680 Remote control",
-  .modulation    = OOK_PULSE_PWM_RAW,
-  .short_limit   = 400,
-  .long_limit    = 1200,
-  .reset_limit   = 13000,
-  .json_callback = &ht680_callback,
-  .disabled      = 0,
-  .demod_arg     = 1
+	.name          = "HT680 Remote control",
+	.modulation    = OOK_PULSE_PWM_RAW,
+	.short_limit   = 400,
+	.long_limit    = 1200,
+	.reset_limit   = 13000,
+	.json_callback = &ht680_callback,
+	.disabled      = 0,
+	.demod_arg     = 1
 };

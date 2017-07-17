@@ -47,7 +47,7 @@ static int lightwave_rf_callback(bitbuffer_t *bitbuffer) {
 	// Transmitted pulses are always 72
 	// Pulse 72 (delimiting "1" is not demodulated, as gap becomes End-Of-Message - thus expected length is 71
 	if ((bitbuffer->bits_per_row[0] == 71)
-		&& (bitbuffer->num_rows == 1))		// There should be only one message (and we use the rest...) 
+		&& (bitbuffer->num_rows == 1))		// There should be only one message (and we use the rest...)
 	{
 		// Polarity is inverted
 		bitbuffer_invert(bitbuffer);
@@ -106,7 +106,7 @@ static int lightwave_rf_callback(bitbuffer_t *bitbuffer) {
 		// Print out generic decode
 		// Decoded nibbles are in row 3
 		fprintf(stdout, "LightwaveRF:\n");
-		fprintf(stdout, "ID = 0x%X%X%X\n", bb[3][2], bb[3][3], bb[3][4]);
+		fprintf(stdout, "ID = 0x%02X%02X%02X\n", bb[3][2], bb[3][3], bb[3][4]);
 		fprintf(stdout, "Subunit = %u\n", (bb[3][1] & 0xF0) >> 4);
 		fprintf(stdout, "Command = %u\n", bb[3][1] & 0x0F);
 		fprintf(stdout, "Parameter = %u\n", bb[3][0]);
@@ -133,6 +133,3 @@ r_device lightwave_rf = {
 	.disabled		= 1,
 	.demod_arg		= 0,
 };
-
-
-

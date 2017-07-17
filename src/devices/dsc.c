@@ -11,7 +11,7 @@
  * (at your option) any later version.
  *
  * DSC - Digital Security Controls 433 Mhz Wireless Security Contacts
- *       doors, windows, smoke, CO2, water, 
+ *       doors, windows, smoke, CO2, water,
  *
  * Protcol Description available in this FCC Report for FCC ID F5300NB912
  *  https://apps.fcc.gov/eas/GetApplicationAttachment.html?id=100988
@@ -46,7 +46,7 @@
  *
  #    SSSS         S         S         S         S           Synb bit positions
  *        ssss ssss ttt teeee ee eeeeee e eeeeeee  cccccccc  type
- *        tttt tttt yyy y1111 22 223333 4 4445555  rrrrrrrr  
+ *        tttt tttt yyy y1111 22 223333 4 4445555  rrrrrrrr
  *
  *  Bits: 0,1,2,3,12,21,30,39 should == 1
  *
@@ -55,7 +55,7 @@
  *  ESN (e1-5)  = 20 bits, Electronic Serial Number: Sensor ID.
  *  CRC (cr)    = 8 bits, CRC, type/polynom to be determined
  *
- * The ESN in practice is 24 bits, The type + remaining 5 nybbles, 
+ * The ESN in practice is 24 bits, The type + remaining 5 nybbles,
  *
  * The CRC is 8 bit, "little endian", Polynomial 0xf5, Inital value 0x3d
  *
@@ -69,9 +69,9 @@
 #include "rtl_433.h"
 #include "util.h"
 
-#define DSC_CT_MSGLEN		5	
-#define DSC_CT_CRC_POLY		0xf5
-#define DSC_CT_CRC_INIT		0x3d
+#define DSC_CT_MSGLEN        5
+#define DSC_CT_CRC_POLY        0xf5
+#define DSC_CT_CRC_INIT        0x3d
 
 
 static int DSC_callback(bitbuffer_t *bitbuffer) {
@@ -80,11 +80,12 @@ static int DSC_callback(bitbuffer_t *bitbuffer) {
     char time_str[LOCAL_TIME_BUFLEN];
 
     if (debug_output > 1) {
-	fprintf(stderr,"Possible DSC Contact: ");
-	bitbuffer_print(bitbuffer);
+        fprintf(stderr,"Possible DSC Contact: ");
+        bitbuffer_print(bitbuffer);
     }
 
     for (int row = 0; row < bitbuffer->num_rows; row++) {
+        
 	if (debug_output > 1 && bitbuffer->bits_per_row[row] > 0 ) {
 	    fprintf(stderr,"row %d bit count %d\n", row, 
 		    bitbuffer->bits_per_row[row]);
@@ -154,11 +155,10 @@ static int DSC_callback(bitbuffer_t *bitbuffer) {
 	} else if (debug_output) {
 	    fprintf(stderr,"%s DSC Contact bad CRC: %06X, Status: %02X, CRC: %02X\n",
 		   time_str, esn, status, crc);
-	}
     }
 
     if (valid_cnt) {
-	return 1;
+        return 1;
     }
 
     return 0;
@@ -166,15 +166,12 @@ static int DSC_callback(bitbuffer_t *bitbuffer) {
 
 
 r_device DSC = {
-    .name		= "DSC Security Contact",
-    .modulation		= OOK_PULSE_PCM_RZ,
-    .short_limit	= 250,	// Pulse length, 250 µs
-    .long_limit		= 500,	// Bit period, 500 µs
-    .reset_limit	= 5000, // Max gap, 
-    .json_callback	= &DSC_callback,
-    .disabled		= 1,
-    .demod_arg		= 0,
+    .name          = "DSC Security Contact",
+    .modulation    = OOK_PULSE_PCM_RZ,
+    .short_limit   = 250,    // Pulse length, 250 µs
+    .long_limit    = 500,    // Bit period, 500 µs
+    .reset_limit   = 5000, // Max gap,
+    .json_callback = &DSC_callback,
+    .disabled      = 1,
+    .demod_arg     = 0,
 };
-
-
-
