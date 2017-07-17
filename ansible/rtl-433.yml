@@ -1,0 +1,78 @@
+#RTL-SDR and RTL-433 installs
+
+- hosts: raspi-zw.local
+  
+  remote_user: pi
+
+  vars:
+#    - destination: /home/pi/temp/rtl-sdr
+
+  tasks:
+    - name: Rtl-Sdr | Cloning rtl-sdr
+      git: repo=git://git.osmocom.org/rtl-sdr.git
+           dest=/home/pi/temp/rtl-sdr
+           accept_hostkey=yes
+
+    - name: Cmake
+      cmake: 
+        binary_dir: /home/pi/temp/rtl-sdr
+        source_dir: /home/pi/temp/rtl-sdr
+        cache_vars: {INSTALL_UDEV_RULES: 'ON', DETACH_KERNEL_DRIVER: 'ON'}
+      register: result
+
+    - debug: var=result   
+
+    - name: make
+      make:
+        chdir: /home/pi/temp/rtl-sdr
+        #target: install
+        #become: yes
+      register: result
+
+    - debug: var=result      
+
+    - name: make install
+      make:
+        chdir: /home/pi/temp/rtl-sdr
+        target: install
+      register: result
+      become: yes
+
+    - debug: var=result 
+
+    - name: ldconfig
+      command: ldconfig
+      become: yes
+
+#------------------------------------------------------
+
+    - name: Rtl-433 Cloning rtl-433
+      #git: repo=https://github.com/merbanan/rtl_433
+      git: repo=https://github.com/ggsubs/rtl_433.git
+           dest=/home/pi/temp/rtl-433
+           accept_hostkey=yes
+
+    - name: Cmake
+      cmake: binary_dir=/home/pi/temp/rtl-433
+           source_dir=/home/pi/temp/rtl-433
+      register: result
+
+    - debug: var=result   
+
+    - name: make
+      make:
+        chdir: /home/pi/temp/rtl-433
+      register: result
+
+    - debug: var=result      
+
+    - name: make install
+      make:
+        chdir: /home/pi/temp/rtl-433
+        target: install
+      register: result
+      become: yes
+
+    - debug: var=result 
+
+#------------------------------------------------------
